@@ -56,7 +56,7 @@ public class ProjectListServlet extends HttpServlet {
 			// 슬라이드 영역
 			List<Gathering> projectSlideList = gatheringService.findProjectSlide();
 			
-			// 북마크
+			// 찜 리스트
 			Map<String, Object> bmParam = new HashMap<>();
 			if(loginMember != null) {
 				loginMemberId = loginMember.getMemberId();

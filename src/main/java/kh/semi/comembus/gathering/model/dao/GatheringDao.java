@@ -182,9 +182,12 @@ public class GatheringDao {
 		int start = (int) param.get("start");
 		int end = (int) param.get("end");
 
-		// [str1] = "and ps_no in(select ps_no from project_study where ps_no = ps.ps_no and upper(local) = upper('" + selectLocalKeyword + "'))"
-        // [str2] = "and ps_no in(select ps_no from project_member_dept where ps_no = ps.ps_no and job_code in('" + selectJobKeyword + "') and capacity_number > recruited_number)"
-		// [str3] = "and status = '" + statusYN + "'"
+		// select * from (
+			// select row_number() over(order by reg_date desc) rnum, ps.*,
+			//(select nvl(sum(recruited_number), 0) from project_member_dept where ps_no = ps.ps_no) recruited_cnt
+			// from project_study ps where gathering_type = 'P'
+			// [str1] [str2] [str3] and end_date > current_date) p 
+			// where rnum between ? and ?
 
 		// 랜딩페이지(필터 미지정시)
 		if("All".equals(selectLocalKeyword)) {

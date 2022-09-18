@@ -6,25 +6,38 @@ ws.addEventListener('error', (e) => console.log('error : ', e));
 ws.addEventListener('close', (e) => console.log('close : ', e));
 ws.addEventListener('message', (e) => {
 	console.log('message : ', e);
-	const {messageType, data : {msg}, time} = JSON.parse(e.data);
+	const {messageType,  data : {msg}, time} = JSON.parse(e.data);
+	
+	const wrapper = document.querySelector("#notification");
+	const blackBell = wrapper.querySelector("#blackBell");
 	switch(messageType){
 		case 'NEW_COMMENT' :
-		case 'NEW_APPLICANT' :
-		case 'APPLY_RESULT' :
-		case 'APPLY_CANCELED':
-/*			const wrapper = document.querySelector("#notification");
-			const blackBell = wrapper.querySelector("#blackBell");
-			const i = document.createElement('i');
-			blackBell.style.display = 'none';
-			i.style.color = 'red';
-			i.classList.add('fa-solid', 'fa-bell', 'bell');
-			i.addEventListener('click', () => {
+			blackBell.style.color = 'red';
+			$(blackBell).one('click', () => {
 				alert(msg);
-				i.remove();
-				blackBell.style.display = 'inline-block';
+				blackBell.style.color = 'inherit';
 			});
-			wrapper.append(i);
-*/
+			break;
+		case 'NEW_APPLICANT' :
+			blackBell.style.color = 'red';
+			$(blackBell).one('click', () => {
+				alert(msg);
+				blackBell.style.color = 'inherit';
+			});
+			break;
+		case 'APPLY_RESULT' :
+			blackBell.style.color = 'red';
+			$(blackBell).one('click', () => {
+				alert(msg);
+				blackBell.style.color = 'inherit';
+			});
+			break;
+		case 'APPLY_CANCELED':
+			blackBell.style.color = 'red';
+			$(blackBell).one('click', () => {
+				alert(msg);
+				blackBell.style.color = 'inherit';
+			});
 			break;
 	}
 	

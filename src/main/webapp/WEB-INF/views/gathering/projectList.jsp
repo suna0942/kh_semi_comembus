@@ -4,18 +4,16 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ include file="/WEB-INF/views/common/header.jsp" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+
 <link rel="stylesheet" href="<%=request.getContextPath() %>/css/gathering/gatheringList.css">  
 <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css"/>
 <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 <script defer src="<%=request.getContextPath() %>/js/gathering/gathering.js"></script>
 <script src="<%= request.getContextPath() %>/js/jquery-3.6.0.js"></script>
-<%
-	List<Gathering> projectList = (List<Gathering>) request.getAttribute("projectList");
-	List<Gathering> bookmarkList = (List<Gathering>) request.getAttribute("bookmarkList");
-	List<Gathering> projectSlideList = (List<Gathering>) request.getAttribute("projectSlideList");
-	String type = request.getParameter("searchType");
-	String keyword = request.getParameter("searchKeyword");
-%>
+
 <script>
 
 const bookmarkFilter = (num) => {
@@ -25,27 +23,23 @@ const bookmarkFilter = (num) => {
 	
 	const bookmarkYN = $("#p__bookmark").is(':checked') ? "Y" : "All";
 	let memberId = "";
-	<% if(loginMember == null){ %>
+	<c:if test="${empty loginMember}">
 		alert("로그인 후 이용해주세요");
 		$("#p__bookmark").prop('checked', false);
 		return;
-	<%	} %>
-	<% if(loginMember != null){ %>
-		memberId = '<%= loginMember.getMemberId() %>';
-	<%
-		}	
-	%>
+	</c:if>
+	
+	<c:if test="${!empty loginMember}">
+		memberId = '${loginMember.memberId}';
+	</c:if>
+	
 	let cPage = num;
 	const numPerPage = 12;
 	let totalPages = 0;
 	
 	$.ajax({
-		url: '<%= request.getContextPath() %>/gathering/searchProBookmark',
-		data: {
-			cPage: cPage,
-			bookmarkYN: bookmarkYN,
-			memberId: memberId
-			},
+		url: '${pageContext.request.contextPath}/gathering/searchProBookmark',
+		data: {cPage, bookmarkYN,memberId},
 		success(bookmarkFilterLists){
 			const {bookmarkList, projectList, totalContent, cPage} = bookmarkFilterLists;
  				
@@ -58,7 +52,6 @@ const bookmarkFilter = (num) => {
 					document.querySelector(".ps-lists").innerHTML =
 						bookmarkList.reduce((html, bookmarkPro, index) => {
 							const {psNo, title, viewcount, bookmark, topic, recruited_cnt, people} = bookmarkPro;
-							const bookmarkCnt = bookmark < 0 ? 0 : bookmark;
 							
 							return `\${html}
 							<div class="ps-pre">
@@ -193,7 +186,9 @@ const gatheringFilter = (num) => {
 						<a href="<%= request.getContextPath()%>/gathering/projectView?psNo=\${psNo}">
 							<img src="<%= request.getContextPath() %>/images/\${topic}.jpg" class="ps-pre__img" alt="해당 프로젝트 주제 이미지">
 						</a>
-						<p class="bold">\${topic === 'social' ? '소셜네트워크' : (topic === 'game' ? '게임' : (topic === 'travel' ? '여행' : (topic === 'finance' ? '금융' : '이커머스')))}</p>
+						<p class="bold">
+						\${topic === 'social' ? '소셜네트워크' : (topic === 'game' ? '게임' : (topic === 'travel' ? '여행' :
+							(topic === 'finance' ? '금융' : '이커머스')))}</p>
 						<p class="bold ps-title">\${title}</p>
 						<ul class="ps-pre__etc">
 							<li>
@@ -294,8 +289,8 @@ $(document).on('click', '.bookmark-back', function(e){
 		<!-- 모임페이지 시작 -->
 		<!-- 상단 프로젝트/스터디 구분바 -->
 		<section class="gathering-bar">
-			<p><a href="<%= request.getContextPath()%>/gathering/projectList">프로젝트</a></p>
-			<p><a href="<%= request.getContextPath()%>/gathering/studyList">스터디</a></p>
+			<p><a href="${pageContext.request.contextPath}/gathering/projectList">프로젝트</a></p>
+			<p><a href="${pageContext.request.contextPath}/gathering/studyList">스터디</a></p>
 		</section>
 		<section class="ps__header">
 			<div class="ps__header__text">
@@ -304,32 +299,35 @@ $(document).on('click', '.bookmark-back', function(e){
 			<hr>
 			<div class="ps__header__content swiper">
 				<div class="swiper-wrapper">
-				<%
-				if(projectSlideList != null && !projectSlideList.isEmpty()){
-					for(Gathering _proslide : projectSlideList){
-						GatheringExt proslide = (GatheringExt) _proslide;
-						String topic = proslide.getTopic();
-				%>
-				<div class="swiper-slide">
-					<a href="<%= request.getContextPath()%>/gathering/projectView?psNo=<%= proslide.getPsNo()%>">
-						<img src="<%= request.getContextPath() %>/images/<%= topic %>.jpg" class="ps__header__content__img" alt="해당 프로젝트 주제 이미지">
-					</a>
-					<ul class="ps__header__content-info">
-						<li><p class="bold"><%= "social".equals(topic) ? "소셜네트워크" : ("game".equals(topic) ? "게임" : ("travel".equals(topic) ? "여행" : ("finance".equals(topic) ? "금융" : "이커머스"))) %></p></li>
-						<li><a href="<%= request.getContextPath()%>/gathering/projectView?psNo=<%= proslide.getPsNo()%>" class="bold"><%= proslide.getTitle() %></a></li>
-						<li class="ps__header__content-content"><p><%= proslide.getContent() %></p></li>
-						<li class="bold">
-							<span class="heart-emoji">&#9829; <%= proslide.getBookmark() < 0 ? 0 : proslide.getBookmark() %></span>
-							<span>모집인원 <%= proslide.getRecruited_cnt() %> / <%= proslide.getPeople() %></span>
-						</li>
-					</ul>
+				<c:if test="${!empty projectSlideList}">
+					<c:forEach items="${projectSlideList}" var="slidePro" varStatus="vs">
+					<div class="swiper-slide">
+						<a href="${pageContext.request.contextPath}/gathering/projectView?psNo=${slidePro.topic}">
+							<img src='<c:url value="/images/${slidePro.topic}.jpg" />' class="ps__header__content__img" alt="해당 프로젝트 주제 이미지">
+						</a>
+						<ul class="ps__header__content-info">
+							<li>
+								<p class="bold">
+									<c:choose>
+										<c:when test="${slidePro.topic eq 'social'}">소셜네트워크</c:when>
+										<c:when test="${slidePro.topic eq 'game'}">게임</c:when>
+										<c:when test="${slidePro.topic eq 'travel'}">여행</c:when>
+										<c:when test="${slidePro.topic eq 'finance'}">금융</c:when>
+										<c:when test="${slidePro.topic eq 'ecommerce'}">이커머스</c:when>
+									</c:choose>
+								</p>
+							</li>
+							<li><a href="${pageContext.request.contextPath}/gathering/projectView?psNo=${slidePro.psNo}" class="bold">${slidePro.title}</a></li>
+							<li class="ps__header__content-content"><p>${slidePro.content}</p></li>
+							<li class="bold">
+								<span class="heart-emoji">&#9829; ${slidePro.bookmark}</span>
+								<span>모집인원 ${slidePro.recruited_cnt} / ${slidePro.people}</span>
+							</li>
+						</ul>
+					</div>
+					</c:forEach>
+				</c:if>
 				</div>
-				<%
-					}
-				}
-				%>
-				</div>
-
 				<div class="swiper-button-next"></div>
 				<div class="swiper-button-prev"></div>
 				<div class="swiper-pagination"></div>
@@ -383,84 +381,77 @@ $(document).on('click', '.bookmark-back', function(e){
 				</script>
 			</div>
 			<div class="ps-lists">
-			<%
-			if(projectList != null && !projectList.isEmpty()){
-				for(Gathering _project : projectList){
-					GatheringExt project = (GatheringExt) _project;
-					int projectNo = project.getPsNo();
-			%>
+			<c:if test="${!(empty projectList)}">
+				<c:forEach items="${projectList}" var="project" varStatus="vs" >
 				<div class="ps-pre">
-					<a href="<%= request.getContextPath()%>/gathering/projectView?psNo=<%= projectNo %>">
-						<img src="<%= request.getContextPath() %>/images/<%= project.getTopic() %>.jpg" class="ps-pre__img" alt="해당 프로젝트 주제 이미지">
+					<a href="${pageContext.request.contextPath}/gathering/projectView?psNo=${project.psNo}">
+						<img src="${pageContext.request.contextPath}/images/${project.topic}.jpg" class="ps-pre__img" alt="해당 프로젝트 주제 이미지">
 					</a>
-					<p class="bold"><%= "social".equals(project.getTopic()) ? "소셜네트워크" : ("game".equals(project.getTopic()) ? "게임" : ("travel".equals(project.getTopic()) ? "여행" : ("finance".equals(project.getTopic()) ? "금융" : "이커머스"))) %></p>
-					<a href="<%= request.getContextPath()%>/gathering/projectView?psNo=<%= projectNo %>">
-						<p class="bold ps-title"><%= project.getTitle() %></p>
+					<p class="bold">
+							<c:choose>
+								<c:when test="${project.topic eq 'social'}">소셜네트워크</c:when>
+								<c:when test="${project.topic eq 'game'}">게임</c:when>
+								<c:when test="${project.topic eq 'travel'}">여행</c:when>
+								<c:when test="${project.topic eq 'finance'}">금융</c:when>
+								<c:when test="${project.topic eq 'ecommerce'}">이커머스</c:when>
+							</c:choose>
+					</p>
+					<a href="${pageContext.request.contextPath}/gathering/projectView?psNo=${project.psNo}">
+						<p class="bold ps-title">${project.title}</p>
 					</a>
 					<ul class="ps-pre__etc">
 						<li> 
-							<span class="heart-emoji">&#9829;</span><%= project.getBookmark() < 0 ? 0 : project.getBookmark() %>
+							<span class="heart-emoji">&#9829;</span>${project.bookmark}
 						</li>
 						<li class="hoverList">
-							<span>모집인원 <%= project.getRecruited_cnt() %> / <%= project.getPeople() %></span>
+							<span>모집인원 ${project.recruited_cnt} / ${project.people}</span>
 						</li>
 					</ul>
 					<div class="ps__bookmark">
-					<% if(loginMember == null) { %>
+					<c:if test="${empty loginMember}">
 						<button "disabled" class="bookmark-front" onclick="alert('로그인 후 이용해주세요');">♡</button>
-					<%
-					} else {
-						String tagBack = "<button style='display:none' class='bookmark-back' value='" + projectNo + "'>♥</button>";
-						String tagFront = "<button class='bookmark-front' value='" + projectNo + "'>♡</button>";
-						
-						if(bookmarkList != null && !bookmarkList.isEmpty()){
-							outer:
-							for(int i = 0; i < bookmarkList.size(); i++){
-								int bookPsNo = bookmarkList.get(i).getPsNo();
-								if(projectNo == bookPsNo){
-									tagBack = "";
-									tagFront = "";
-									tagBack = "<button class='bookmark-back' value='" + projectNo + "'>♥</button>";
-									tagFront = "<button style='display:none' class='bookmark-front' value='" + projectNo + "'>♡</button>";
-									break outer;
-								} else {
-									tagBack = "";
-									tagFront = "";
-									tagBack = "<button style='display:none' class='bookmark-back' value='" + projectNo + "'>♥</button>";
-									tagFront = "<button class='bookmark-front' value='" + projectNo + "'>♡</button>";
-								}
-							}
-						}
-					%>
-						<%= tagBack %>
-						<%= tagFront %>
-					<%
-					}
-					%>
+					</c:if>
+					<c:if test="${!empty loginMember}">
+						<c:if test="${!empty bookmarkList}">
+							<c:set var="loop_flag" value="false"></c:set>
+							<c:forEach items="${bookmarkList}" var="bookmark">
+								<c:if test="${not loop_flag}">
+									<c:if test="${!(project.psNo eq bookmark.psNo)}">
+										<c:set var="bstyle">style="display:none"</c:set>
+										<c:set var="fstyle">style="display:block"</c:set>
+									</c:if>
+									<c:if test="${project.psNo eq bookmark.psNo}">
+										<%-- 찜을 한 경우 --%>
+										<c:set var="bstyle">style="display:block"</c:set>
+										<c:set var="fstyle">style="display:none"</c:set>
+										<c:set var="loop_flag" value="true"></c:set>
+									</c:if>
+								</c:if>
+							</c:forEach>
+						</c:if>
+						<button ${bstyle} class='bookmark-back' value="${project.psNo}">♥</button>
+						<button ${fstyle} class='bookmark-front' value="${project.psNo}">♡</button>
+					</c:if>
 					</div>
 				</div>
-			<%
-				}
-			}
-			%>
+				</c:forEach>
+			</c:if>
 			</div>
 			<div id="pagebar">
-				<%= request.getAttribute("pagebar") %>
+				${pagebar}
 			</div>
-			<% if(loginMember != null){ %>
+			<c:if test="${!empty loginMember}">
 			<form
-				action="<%= request.getContextPath() %>/membus/bookmarkAdd" id="tt" method="POST" name="addBookmarkFrm">
+				action="${pageContext.request.contextPath}/membus/bookmarkAdd" id="tt" method="POST" name="addBookmarkFrm">
 				<input type="hidden" name="psNo" id="addBookPs"/>
-				<input type="hidden" name="member_id" value="<%= loginMember.getMemberId() %>" />
+				<input type="hidden" name="member_id" value="${loginMember.memberId}" />
 			</form>
 			<form
-				action="<%= request.getContextPath() %>/membus/bookmarkDel" method="POST" name="delBookmarkFrm">
+				action="${pageContext.request.contextPath}/membus/bookmarkDel" method="POST" name="delBookmarkFrm">
 				<input type="hidden" name="psNo" id="delBookPs"/>
-				<input type="hidden" name="member_id" value="<%= loginMember.getMemberId() %>" />
+				<input type="hidden" name="member_id" value="${loginMember.memberId}" />
 			</form>
-			<%
-			}
-			%>
+			</c:if>
 		</section>
 	</section>
 <script>

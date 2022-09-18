@@ -63,15 +63,15 @@ public class ComembusWebSocket {
 	public static void sendMessage(MessageType messageType, Map<String, Object>data) {
 		String receiver = (String) data.get("receiver");
 		Session session = clientMap.get(receiver);
-		if(session != null) {
-			Basic basic = session.getBasicRemote();
+		Basic basic = session.getBasicRemote();
+		// if(session != null) {
 			try {
 				//System.out.println("[@comemWS]#sendMsg()>>"+data);
 				basic.sendText(msgToJson(messageType, data));
 			}catch(IOException e) {
 				e.printStackTrace();
 			}
-		}
+		// }
 	}
 	
 	private static String msgToJson(MessageType messageType, Map<String, Object>data) {
